@@ -24,7 +24,7 @@ pip install -r requirements.txt
 ```
 CUDA_VISIBLE_DEVICES=0 python main.py --data_dir ../Data/ --log_dir ../logs/ -c configs/simsiam_cifar.yaml --ckpt_dir ~/.cache/ --hide_progress
 
-python main.py --data_dir ./Data/ --log_dir ./logs/ -c configs/simsiam_bone.yaml --ckpt_dir ~/.cache/ --hide_progress
+python main.py --data_dir ../archive/masked_1K_fold/fold_1 --log_dir ./logs/ -c configs/simsiam_bone.yaml --ckpt_dir ~/.cache/ --hide_progress
 ```
 The data folder `../Data/` should look like this:
 ```

@@ -18,25 +18,9 @@ def main(device, args):
 
     train_loader = torch.utils.data.DataLoader(
         dataset=get_dataset(
-            data_dir=data_dir,
+            data_dir=args.data_dir,
             train=True),
         shuffle=True,
-        batch_size=args.train.batch_size,
-        **args.dataloader_kwargs
-    )
-    memory_loader = torch.utils.data.DataLoader(
-        dataset=get_dataset(
-            data_dir=data_dir,
-            train=True),
-        shuffle=False,
-        batch_size=args.train.batch_size,
-        **args.dataloader_kwargs
-    )
-    test_loader = torch.utils.data.DataLoader(
-        dataset=get_dataset( 
-            data_dir=data_dir,
-            train=False),
-        shuffle=False,
         batch_size=args.train.batch_size,
         **args.dataloader_kwargs
     )
@@ -61,7 +45,6 @@ def main(device, args):
     )
 
     logger = Logger(tensorboard=args.logger.tensorboard, matplotlib=args.logger.matplotlib, log_dir=args.log_dir)
-    accuracy = 0 
     # Start training
     global_progress = tqdm(range(0, args.train.stop_at_epoch), desc=f'Training')
     for epoch in global_progress:
@@ -80,13 +63,6 @@ def main(device, args):
             
             local_progress.set_postfix(data_dict)
             logger.update_scalers(data_dict)
-
-        if args.train.knn_monitor and epoch % args.train.knn_interval == 0: 
-            accuracy = knn_monitor(model.module.backbone, memory_loader, test_loader, device, k=min(args.train.knn_k, len(memory_loader.dataset)), hide_progress=args.hide_progress) 
-        
-        epoch_dict = {"epoch":epoch, "accuracy":accuracy}
-        global_progress.set_postfix(epoch_dict)
-        logger.update_scalers(epoch_dict)
     
     # Save checkpoint
     model_path = os.path.join(args.ckpt_dir, f"{args.name}_{datetime.now().strftime('%m%d%H%M%S')}.pth") # datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -105,7 +81,6 @@ def main(device, args):
 
 if __name__ == "__main__":
     args = get_args()
-    data_dir = "E:\code/archive\masked_1K_fold/fold_1/"
     main(device=args.device, args=args)
 
     completed_log_dir = args.log_dir.replace('in-progress', 'debug' if args.debug else 'completed')

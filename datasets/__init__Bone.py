@@ -68,10 +68,35 @@ class BAADataset(Dataset):
         img = cv2.imread(f"{self.file_path}/{num}.png", cv2.IMREAD_COLOR)
 
         if self.isTrain:
-            transform = transform_train
+            return (transform_train(image=img)['image'], transform_train(image=img)['image']), row['boneage']
         else:
-            transform = transform_val
-        return (transform(image=img)['image'], transform(image=img)['image']), row['boneage']
+            return transform_val(image=img)['image'], row['boneage']
+
+
+    def __len__(self):
+        return len(self.df)
+
+
+class BAASingle(Dataset):
+    def __init__(self, df, file_path, isTrain):
+        def preprocess_df(df):
+            df['bonage'] = df['boneage'].astype('float32')
+            return df
+
+        self.df = preprocess_df(df)
+        self.file_path = file_path
+        self.isTrain = isTrain
+
+    def __getitem__(self, index):
+        row = self.df.iloc[index]
+        num = int(row['id'])
+        img = cv2.imread(f"{self.file_path}/{num}.png", cv2.IMREAD_COLOR)
+
+        if self.isTrain:
+            return transform_train(image=img)['image'], row['boneage']
+        else:
+            return transform_val(image=img)['image'], row['boneage']
+
 
     def __len__(self):
         return len(self.df)
@@ -87,3 +112,14 @@ def get_dataset(data_dir, train=True):
 
     dataset = BAADataset(df=df, file_path=filepath, isTrain=train)
     return dataset
+
+
+def get_single(data_dir, train=True):
+    if train:
+        filepath = os.path.join(data_dir, "train")
+        df = pd.read_csv(os.path.join(data_dir, "train.csv"))
+    else:
+        filepath = os.path.join(data_dir, "valid")
+        df = pd.read_csv(os.path.join(data_dir, "valid.csv"))
+
+    return BAASingle(df=df, file_path=filepath, isTrain=train)

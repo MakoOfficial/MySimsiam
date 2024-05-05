@@ -1,4 +1,4 @@
-name: simsiam-bone-experiment-resnet18_cifar_variant1
+name: simsiam-bone-experiment-resnet18
 dataset: 
   name: bone
   image_size: 256
@@ -18,8 +18,8 @@ train:
   warmup_lr: 0
   base_lr: 0.03
   final_lr: 0
-  num_epochs: 10 # this parameter influence the lr decay
-  stop_at_epoch: 10 # has to be smaller than num_epochs
+  num_epochs: 1 # this parameter influence the lr decay
+  stop_at_epoch: 1 # has to be smaller than num_epochs
   batch_size: 8
   knn_monitor: False # knn monitor will take more time
   knn_interval: 1
@@ -34,7 +34,7 @@ eval: # linear evaluation, False will turn off automatic evaluation after traini
   base_lr: 30
   final_lr: 0
   batch_size: 8
-  num_epochs: 100
+  num_epochs: 1
 
 logger:
   tensorboard: True
