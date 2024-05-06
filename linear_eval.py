@@ -24,7 +24,7 @@ def main(args):
         **args.dataloader_kwargs
     )
     test_loader = torch.utils.data.DataLoader(
-        dataset=get_dataset(
+        dataset=get_single(
             data_dir=args.data_dir,
             train=False
         ),
@@ -35,13 +35,13 @@ def main(args):
 
     model = get_backbone(args.model.backbone)
     classifier = nn.Linear(in_features=model.output_dim, out_features=228, bias=True).to(args.device)
-
+    print(f"classifier input dim is {model.output_dim}, output dim is 228")
     assert args.eval_from is not None
     save_dict = torch.load(args.eval_from, map_location='cpu')
     msg = model.load_state_dict({k[9:]: v for k, v in save_dict['state_dict'].items() if k.startswith('backbone.')},
                                 strict=True)
 
-    # print(msg)
+    print(msg)
     model = model.to(args.device)
     model = torch.nn.DataParallel(model)
 
@@ -65,7 +65,7 @@ def main(args):
 
     loss_meter = AverageMeter(name='Loss')
     acc_meter = AverageMeter(name='Accuracy')
-
+    loss_fn = nn.CrossEntropyLoss(reduction='sum')
     # Start training
     global_progress = tqdm(range(0, args.eval.num_epochs), desc=f'Evaluating')
     for epoch in global_progress:
@@ -74,24 +74,34 @@ def main(args):
         classifier.train()
         local_progress = tqdm(train_loader, desc=f'Epoch {epoch}/{args.eval.num_epochs}', disable=True)
 
+        total_size = 0.
+        training_loss = 0.
+
         for idx, (images, labels) in enumerate(local_progress):
             classifier.zero_grad()
             with torch.no_grad():
                 feature = model(images.to(args.device))
 
-            labels = (labels-1).type(torch.LongTensor)
+            labels = (labels-1).type(torch.LongTensor).to(args.device).squeeze()
             preds = classifier(feature)
+            preds = preds.squeeze()
 
-            loss = F.cross_entropy(preds, labels.to(args.device))
+            loss = loss_fn(preds, labels)
 
             loss.backward()
             optimizer.step()
-            loss_meter.update(loss.item())
+            loss_meter.update(loss.item(), n=feature.shape[0])
             lr = lr_scheduler.step()
-            local_progress.set_postfix({'lr': lr, "loss": loss_meter.val, 'loss_avg': loss_meter.avg})
+
+            training_loss += loss.item()
+            total_size += feature.shape[0]
+
+            local_progress.set_postfix({'lr': lr, 'loss': loss_meter.val, 'loss_avg': loss_meter.avg})
+        train_avg = training_loss / total_size
+        print(f"epoch {epoch+1}, avg_loss: {train_avg}")
 
     classifier.eval()
-    MAE_loss, total = 0, 0
+    valid_loss, total = 0., 0.
     acc_meter.reset()
     for idx, (images, labels) in enumerate(test_loader):
         with torch.no_grad():
@@ -99,8 +109,10 @@ def main(args):
             preds = classifier(feature).argmax(dim=1)
             labels = (labels-1).type(torch.LongTensor)
             MAE_loss = F.l1_loss(preds, labels, reduction="sum").item()
+            valid_loss += MAE_loss
+            total += feature.shape[0]
             acc_meter.update(val=MAE_loss, n=feature.shape[0])
-    print(f'Accuracy = {acc_meter.avg:.2f}')
+    print(f'Accuracy = {acc_meter.avg:.2f}, avg valid loss :{(valid_loss / total):.2f}')
 
 
 if __name__ == "__main__":
