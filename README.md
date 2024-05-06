@@ -7,7 +7,7 @@ pip install -r requirements.txt
 ```
 CUDA_VISIBLE_DEVICES=0 python main.py --data_dir ../Data/ --log_dir ../logs/ -c configs/simsiam_cifar.yaml --ckpt_dir ~/.cache/ --hide_progress
 
-python main.py --data_dir ../archive/masked_1K_fold/fold_1 --log_dir ./logs/ -c configs/simsiam_bone.yaml --ckpt_dir ~/.cache/ --hide_progress
+python main.py --data_dir ../../autodl-tmp/male --log_dir ../../autodl-tmp/SimsiamLogs -c configs/simsiam_bone.yaml --ckpt_dir ../../autodl-tmp/SimsiamLogs/cache --hide_progress
 ```
 
 ```
@@ -21,6 +21,8 @@ Log file has been saved to ../logs/completed-simsiam-cifar10-experiment-resnet18
 To evaluate separately:
 ```
 CUDA_VISIBLE_DEVICES=4 python linear_eval.py --data_dir ../Data/ --log_dir ../logs/ -c configs/simsiam_cifar_eval.yaml --ckpt_dir ~/.cache/ --hide_progress --eval_from ~/simsiam-cifar10-experiment-resnet18_cifar_variant1.pth
+
+python linear_eval.py --data_dir ../../autodl-tmp/male/ --log_dir ../../autodl-tmp/SimsiamLogs/ -c configs/simsiam_bone.yaml --ckpt_dir ../../autodl-tmp/SimsiamLogs/cache/ --hide_progress --eval_from ../../autodl-tmp/SimsiamLogs/cache/simsiam-bone-experiment-resnet18_0506025345.pth
 
 creating file ../logs/in-progress_0111061045_simsiam-cifar10-experiment-resnet18_cifar_variant1
 Evaluating: 100%|##########################################################################################################| 200/200 [16:52<00:00,  5.06s/it]

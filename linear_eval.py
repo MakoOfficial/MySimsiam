@@ -97,8 +97,9 @@ def main(args):
         with torch.no_grad():
             feature = model(images.to(args.device))
             preds = classifier(feature).argmax(dim=1)
-            MAE_loss = (preds - labels.to(args.device)).sum().item()
-            acc_meter.update(val=MAE_loss, n=preds.shape[0])
+            labels = (labels-1).type(torch.LongTensor)
+            MAE_loss = F.l1_loss(preds, labels, reduction="sum").item()
+            acc_meter.update(val=MAE_loss, n=feature.shape[0])
     print(f'Accuracy = {acc_meter.avg:.2f}')
 
 

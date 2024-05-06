@@ -18,9 +18,9 @@ train:
   warmup_lr: 0
   base_lr: 0.03
   final_lr: 0
-  num_epochs: 1 # this parameter influence the lr decay
-  stop_at_epoch: 1 # has to be smaller than num_epochs
-  batch_size: 8
+  num_epochs: 100 # this parameter influence the lr decay
+  stop_at_epoch: 100 # has to be smaller than num_epochs
+  batch_size: 32
   knn_monitor: False # knn monitor will take more time
   knn_interval: 1
   knn_k: 200
@@ -33,8 +33,8 @@ eval: # linear evaluation, False will turn off automatic evaluation after traini
   warmup_epochs: 0
   base_lr: 30
   final_lr: 0
-  batch_size: 8
-  num_epochs: 1
+  batch_size: 32
+  num_epochs: 50
 
 logger:
   tensorboard: True
